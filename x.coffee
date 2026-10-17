@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta property="og:title" content="X Coffee-简笔互动">
+    <meta property="og:image" content="https://lf3-static.bytednsdoc.com/obj/eden-cn/ylcylz_fsph_ryhs/ljhwZthlaukjlkulzlp/feisuda/avatar/1.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>X.Coffee · 简笔互动</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23C97B3A' d='M5 7h11v7a4.5 4.5 0 0 1-9 0V7Zm1 1.6v5.4a3.5 3.5 0 0 0 7 0V8.6H6ZM16 8h1.5a2.5 2.5 0 0 1 0 5H16V8Z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <style>
+    :root {
+        --bg: #F4EBDD;
+        --bg2: #EADFCB;
+        --ink: #2A2018;
+        --ink-soft: #7B6A58;
+        --orange: #C97B3A;
+        --orange-deep: #A85E24;
+        --serif: "Noto Serif SC", serif;
+        --sans: "Noto Sans SC", sans-serif;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box
+    }
+
+    body {
+        font-family: var(--sans);
+        color: var(--ink);
+        background: radial-gradient(120% 90% at 50% 0%, var(--bg) 0%, var(--bg2) 80%);
+        min-height: 100vh;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased
+    }
+
+    ::selection {
+        background: var(--orange);
+        color: #fff
+    }
+
+    .top {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px clamp(20px, 5vw, 36px)
+    }
+
+    .brand {
+        font-family: var(--serif);
+        font-weight: 900;
+        font-size: 22px;
+        letter-spacing: 1px
+    }
+
+    .brand small {
+        font-weight: 400;
+        font-family: var(--sans);
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--orange);
+        margin-left: 6px;
+        text-transform: uppercase
+    }
+
+    .top .chip {
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--orange-deep);
+        border: 1px solid rgba(201, 123, 58, .45);
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: rgba(201, 123, 58, .08)
+    }
+
+    .scene {
+        position: relative;
+        z-index: 2;
+        min-height: calc(100vh - 150px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: pointer
+    }/* 标题区 */
+    .head {
+        text-align: center;
+        margin-bottom: 18px
+    }
+
+    .head .kicker {
+        font-size: 11px;
+        letter-spacing: 4px;
+        color: var(--orange);
+        text-transform: uppercase
+    }
+
+    .head h1 {
+        font-family: var(--serif);
+        font-weight: 900;
+        font-size: clamp(26px, 6vw, 40px);
+        margin-top: 8px;
+        letter-spacing: 1px
+    }
+
+    .head h1 em {
+        font-style: normal;
+        color: var(--orange-deep)
+    }/* 展示框 */
+    .frame {
+        position: relative;
+        width: min(340px, 84vw);
+        aspect-ratio: 3/4;
+        background: #fff;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 24px 50px rgba(80, 50, 20, .22), 0 2px 8px rgba(80, 50, 20, .12);
+    }
+
+    .layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%
+    }
+
+    .layer img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block
+    }
+
+    .photo {
+        opacity: 0;
+        transition: opacity 1.4s ease .2s
+    }
+
+    .photo.show {
+        opacity: 1
+    }
+
+    .line {
+        opacity: 1;
+        transition: opacity 1.2s ease;
+        clip-path: circle(0% at 50% 52%);
+        transition-property: clip-path;
+        transition-duration: 1.9s;
+        transition-timing-function: cubic-bezier(.45, .05, .3, 1)
+    }
+
+    .line.drawing {
+        clip-path: circle(82% at 50% 52%)
+    }
+
+    .line.fadeout {
+        opacity: 0;
+        transition-property: opacity;
+        transition-duration: 1s;
+        transition-delay: .15s
+    }/* 笔尖/绘制提示 */
+    .pen {
+        position: absolute;
+        left: 50%;
+        top: 52%;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--orange);
+        box-shadow: 0 0 0 6px rgba(201, 123, 58, .25);
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        z-index: 3
+    }
+
+    .pen.on {
+        opacity: 1;
+        animation: movePen 1.9s ease-in-out forwards
+    }
+
+    @keyframes movePen {
+        0% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1
+        }
+
+        30% {
+            transform: translate(-120%, -20%) scale(1)
+        }
+
+        60% {
+            transform: translate(20%, -120%) scale(1)
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0
+        }
+    }/* 状态文案 */
+    .status {
+        margin-top: 22px;
+        text-align: center;
+        min-height: 56px
+    }
+
+    .status .tap {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ink-soft)
+    }
+
+    .status .tap .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--orange);
+        animation: pulse 1.5s infinite
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity:1
+        }
+
+        50% {
+            transform: scale(1.6);
+            opacity: .35
+        }
+    }
+
+    .result {
+        margin-top: 6px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity .6s ease, transform .6s ease
+    }
+
+    .result.show {
+        opacity: 1;
+        transform: none
+    }
+
+    .result .name {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: 22px
+    }
+
+    .result .price {
+        font-family: var(--serif);
+        color: var(--orange-deep);
+        font-size: 19px;
+        margin-left: 8px
+    }
+
+    .result p {
+        font-size: 13px;
+        color: var(--ink-soft);
+        margin-top: 6px;
+        line-height: 1.7;
+        max-width: 300px
+    }
+
+    .flavors {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 10px;
+        flex-wrap: wrap
+    }
+
+    .flavor {
+        font-size: 11.5px;
+        color: var(--orange-deep);
+        border: 1px solid rgba(201, 123, 58, .4);
+        padding: 3px 12px;
+        border-radius: 20px;
+        background: rgba(201, 123, 58, .06)
+    }
+
+    .bottom {
+        position: relative;
+        z-index: 3;
+        text-align: center;
+        padding: 24px 20px 30px
+    }
+
+    .bottom small {
+        font-size: 11px;
+        color: #9a866c;
+        letter-spacing: 1px
+    }
+
+    .bottom .dots {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-top: 8px
+    }
+
+    .bottom .dots i {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(201, 123, 58, .5)
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            transition: none !important;
+            animation: none !important
+        }
+    }
+    </style>
+</head>
+<body>
+
+    <header class="top">
+        <div class="brand">
+            X Coffee
+            <small>Sketch Interaction</small>
+        </div>
+        <div class="chip">简笔互动</div>
+    </header>
+
+    <section class="scene" id="scene">
+        <div class="head">
+            <div class="kicker">Draw &amp; Color</div>
+            <h1>
+                一笔画出
+                <em>这杯特调</em>
+            </h1>
+        </div>
+
+        <div class="frame" id="frame">
+            <div class="layer photo">
+                <img src="https://aka.doubaocdn.com/s/PFIU45rmkU" alt="真实特调照片">
+            </div>
+            <div class="layer line" id="line">
+                <img src="https://aka.doubaocdn.com/s/WRbq8KcG9l" alt="简笔线稿">
+            </div>
+            <div class="pen" id="pen"></div>
+        </div>
+
+        <div class="status" id="status">
+            <div class="tap" id="tapHint">
+                <span class="dot"></span>
+                轻触画框，开始勾勒
+            </div>
+        </div>
+
+        <div class="result" id="result">
+            <div>
+                <span class="name">X.Coffee 新品特调</span>
+                <span class="price">以门店为准</span>
+            </div>
+            <p>琥珀冷萃 · 蜜饯橙皮 · 薄荷叶与冰块，清新带一抹橙香。</p>
+            <div class="flavors">
+                <span class="flavor">橙香</span>
+                <span class="flavor">薄荷</span>
+                <span class="flavor">冰爽</span>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bottom">
+        <div>X.Coffee </div>
+        <div class="dots">
+            <i></i>
+            <i></i>
+            <i></i>
+        </div>
+        <small>本页为示例互动 · 品名与价格以实际门店为准</small>
+    </footer>
+
+    <script>
+    (function() {
+        var line = document.getElementById('line');
+        var photo = document.querySelector('.photo');
+        var pen = document.getElementById('pen');
+        var result = document.getElementById('result');
+        var status = document.getElementById('status');
+        var scene = document.getElementById('scene');
+        var state = 'idle';
+
+        function setTap(txt) {
+            status.innerHTML = '<div class="tap"><span class="dot"></span>' + txt + '</div>';
+        }
+
+        function start() {
+            if (state !== 'idle')
+                return;
+            state = 'drawing';
+            setTap('正在勾勒…');
+            line.classList.add('drawing');
+            pen.classList.add('on');
+            setTimeout(function() {
+                pen.classList.remove('on');
+                line.classList.add('fadeout');
+                photo.classList.add('show');
+                result.classList.add('show');
+                setTap('上色完成 · 再点一次回到简笔');
+                state = 'colored';
+            }, 2100);
+        }
+
+        function reset() {
+            state = 'idle';
+            line.classList.remove('drawing', 'fadeout');
+            photo.classList.remove('show');
+            result.classList.remove('show');
+            status.innerHTML = '<div class="tap" id="tapHint"><span class="dot"></span>轻触画框，开始勾勒</div>';
+        }
+
+        scene.addEventListener('click', function() {
+            if (state === 'idle')
+                start();
+            else if (state === 'colored')
+                reset();
+        });
+    })();
+    </script>
+</body>
+</html>
